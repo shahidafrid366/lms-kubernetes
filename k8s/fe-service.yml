@@ -3,10 +3,8 @@ kind: Service
 metadata:
   name: lms-fe-service
 spec:
-  type: NodePort        # This is for minikube for k8s cluster use LoadBalancer service
-  ports:
-  - port: 80
-    targetPort: 80
-    nodePort: 32200
+  type: LoadBalancer
   selector:
     app: lms-fe
+  ports:
+  - port: 80
