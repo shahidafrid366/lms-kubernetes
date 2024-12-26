@@ -1,0 +1,73 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: 'Default'
+
+variables:
+  azurePostgresHost: '$(azurePostgresHost)'
+  azurePostgresUser: '$(azurePostgresUser)'
+  azurePostgresPassword: '$(azurePostgresPassword)'
+  vmHost: '4.188.80.243'
+  vmUser: 'crm'
+  vmPassword: '$(vmPassword)'
+
+stages:
+  - stage: Build
+    displayName: Build Stage
+    jobs:
+      - job: Build
+        displayName: Build Frontend and Backend
+        steps:
+          - task: Checkout@1
+            displayName: 'Checkout code from git repo'
+
+          - script: |
+              sed -i "s/{{DB_HOST}}/${{azurePostgresHost}}/g" backend/.env
+              sed -i "s/{{DB_HOST}}/${{azurePostgresUser}}/g" backend/.env
+              sed -i "s/{{DB_HOST}}/${{azurePostgresPassword}}/g" backend/.env
+            displayName: 'Updating Backend .env File'
+            
+          - task: Docker@2
+            displayName: 'Build and Push Frontend Docker Image'
+            inputs:
+              command: 'buildAndPush'
+              repository: 'crnreg.azurecr.io/frontend'
+              dockerfile: 'frontend/Dockerfile'
+              tags: 'latest'
+          
+          - task: Docker@2
+            displayName: 'Build And Push Backend Docker Image'
+            inputs:
+              command: 'buildAndPush'
+              repository: 'crnreg.azurecr.io/backend'
+              dockerfile: 'backend/Dockerfile'
+              tags: 'latest'
+  - stage: Deploy 
+    dependsOn: Build
+    displayName: Deploy to VM
+    jobs:
+    - job: Deploy
+      displayName: Deploy to CRM VM
+      steps:
+        - script: |
+             sudo apt-get update && sudo apt-get install -y sshpass
+          displayName: 'Install sshpass'
+
+        - script: |
+            sshpass -p "${{ vmPassword }}" ssh -o StrictHostKeyChecking=no{{ vmUser }}@${{ vmHost }} << 'EOF'
+            docker pull crnreg.azurecr.io/frontend:latest
+            docker pull crnreg.azurecr.io/backend:latest
+            docker stop frontend || true && docker rm frontend || true
+            docker stop backend || true && docker rm backend || true
+            docker run -dt --name frontend -p 80:80 crnreg.azurecr.io/frontend:latest
+            docker run -dt --name backend -p 3000:3000 --env-file backend/.env crnreg.azurecr.io/backend:latest
+            EOF
+          displayName: 'Deploy Containers to VM'
