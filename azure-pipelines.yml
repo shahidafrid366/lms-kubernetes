@@ -22,8 +22,6 @@ variables:
   #enabling debugging for logs
   system.debug: true
 
-  
-
 stages:
   - stage: Build
     displayName: Build Stage
@@ -34,12 +32,12 @@ stages:
         steps:
           - task: Checkout@1
             displayName: 'Checkout code from git repo'
-          - script: |
-              echo "azurePostgresHost: ${{ variables.azurePostgresHost }}"
-              echo "azurePostgresUser: ${{ variables.azurePostgresUser }}"
-              echo "azurePostgresPassword: ${{ variables.azurePostgresPassword }}"
-              echo "vmPassword: ${{ variables.vmPassword }}"
-              displayName: 'Verify Variables'
+          # - script: |
+          #     echo "azurePostgresHost: ${{ variables.azurePostgresHost }}"
+          #     echo "azurePostgresUser: ${{ variables.azurePostgresUser }}"
+          #     echo "azurePostgresPassword: ${{ variables.azurePostgresPassword }}"
+          #     echo "vmPassword: ${{ variables.vmPassword }}"
+          #     displayName: 'Verify Variables'
           - script: |
               sed -i "s/{{DB_HOST}}/${{ variables.azurePostgresHost }}/g" backend/.env
               sed -i "s/{{DB_HOST}}/${{ variables.azurePostgresUser}}/g" backend/.env
