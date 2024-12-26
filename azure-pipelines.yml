@@ -18,6 +18,8 @@ variables:
   vmHost: '4.188.80.243'
   vmUser: 'crm'
   vmPassword: $(vmPassword)
+
+  #enabling debugging for logs
   system.debug: true
 
 stages:
