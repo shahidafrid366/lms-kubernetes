@@ -18,6 +18,7 @@ variables:
   vmHost: '4.188.80.243'
   vmUser: 'crm'
   vmPassword: $(vmPassword)
+  system.debug: true
 
 stages:
   - stage: Build
