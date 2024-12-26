@@ -30,9 +30,9 @@ stages:
             displayName: 'Checkout code from git repo'
 
           - script: |
-              sed -i "s/{{DB_HOST}}/${{azurePostgresHost}}/g" backend/.env
-              sed -i "s/{{DB_HOST}}/${{azurePostgresUser}}/g" backend/.env
-              sed -i "s/{{DB_HOST}}/${{azurePostgresPassword}}/g" backend/.env
+              sed -i "s/{{{{DB_HOST}}}}/${{ variables.azurePostgresHost }}/g" backend/.env
+              sed -i "s/{{{{DB_HOST}}}}/${{ variables.azurePostgresUser}}/g" backend/.env
+              sed -i "s/{{{{DB_PASSWORD}}}}/${{variables.azurePostgresPassword}}/g" backend/.env
             displayName: 'Updating Backend .env File'
             
           - task: Docker@2
@@ -62,7 +62,7 @@ stages:
           displayName: 'Install sshpass'
 
         - script: |
-            sshpass -p "${{ vmPassword }}" ssh -o StrictHostKeyChecking=no{{ vmUser }}@${{ vmHost }} << 'EOF'
+            sshpass -p "${{ variables.vmPassword }}" ssh -o StrictHostKeyChecking=no "${{ variables.vmUser }}"@${{ variables.vmHost }} << 'EOF'
             docker pull crnreg.azurecr.io/frontend:latest
             docker pull crnreg.azurecr.io/backend:latest
             docker stop frontend || true && docker rm frontend || true
