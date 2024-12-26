@@ -12,12 +12,12 @@ pool:
   name: 'Default'
 
 variables:
-  azurePostgresHost: '$(azurePostgresHost)'
-  azurePostgresUser: '$(azurePostgresUser)'
-  azurePostgresPassword: '$(azurePostgresPassword)'
+  azurePostgresHost: $(azurePostgresHost)
+  azurePostgresUser: $(azurePostgresUser)
+  azurePostgresPassword: $(azurePostgresPassword)
   vmHost: '4.188.80.243'
   vmUser: 'crm'
-  vmPassword: '$(vmPassword)'
+  vmPassword: $(vmPassword)
 
 stages:
   - stage: Build
@@ -30,11 +30,17 @@ stages:
             displayName: 'Checkout code from git repo'
 
           - script: |
-              sed -i "s/{{{{DB_HOST}}}}/${{ variables.azurePostgresHost }}/g" backend/.env
-              sed -i "s/{{{{DB_HOST}}}}/${{ variables.azurePostgresUser}}/g" backend/.env
-              sed -i "s/{{{{DB_PASSWORD}}}}/${{variables.azurePostgresPassword}}/g" backend/.env
+              sed -i "s/{{DB_HOST}}/${{ variables.azurePostgresHost }}/g" backend/.env
+              sed -i "s/{{DB_HOST}}/${{ variables.azurePostgresUser}}/g" backend/.env
+              sed -i "s/{{DB_PASSWORD}}/${{ variables.azurePostgresPassword }}/g" backend/.env
             displayName: 'Updating Backend .env File'
             
+          - task: Docker@2
+            displayName: 'Login to Azure Contaier Registry'
+            inputs:
+              command: 'login'
+              containerRegistry: 'acrregistry'
+
           - task: Docker@2
             displayName: 'Build and Push Frontend Docker Image'
             inputs:
